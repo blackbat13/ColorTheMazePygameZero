@@ -8,26 +8,37 @@ size = 20
 
 speed = 50
 
+max_source_id = -1
+
 cells = []
+
+source_id_counter = []
+
+current_sources = 0
+
 
 def draw():
     count = 0
-    while len(cells) > 0 and count < speed:
-        pos, color = cells.pop(0)
+    while len(cells) > 0 and count < speed * current_sources:
+        pos, color, s_id = cells.pop(0)
         x, y = pos
         if x < 0 or x >= WIDTH or y < 0 or y >= HEIGHT:
+            decrease_source_count(s_id)
             continue
 
         if screen.surface.get_at((x, y)) != (255, 255, 255, 255):
+            decrease_source_count(s_id)
             continue
 
         screen.surface.set_at((x, y), color)
         count += 1
 
-        cells.append(((x + 1, y), color))
-        cells.append(((x - 1, y), color))
-        cells.append(((x, y + 1), color))
-        cells.append(((x, y - 1), color))
+        source_id_counter[s_id] += 4
+        cells.append(((x + 1, y), color, s_id))
+        cells.append(((x - 1, y), color, s_id))
+        cells.append(((x, y + 1), color, s_id))
+        cells.append(((x, y - 1), color, s_id))
+        decrease_source_count(s_id)
 
 
 def update():
@@ -59,25 +70,22 @@ def draw_maze():
 
 
 def on_mouse_down(pos):
-    cells.append((pos, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))))
+    cells.append((pos, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), add_source()))
 
 
-def flood_fill(x, y):
-    cells = [(x, y)]
-    while len(cells) > 0:
-        x, y = cells.pop()
-        if x < 0 or x >= WIDTH or y < 0 or y >= HEIGHT:
-            continue
+def add_source():
+    global max_source_id, current_sources
+    source_id_counter.append(1)
+    max_source_id += 1
+    current_sources += 1
+    return max_source_id
 
-        if screen.surface.get_at((x, y)) != (255, 255, 255, 255):
-            continue
 
-        screen.surface.set_at((x, y), (255, 0, 0))
-
-        cells.append((x + 1, y))
-        cells.append((x - 1, y))
-        cells.append((x, y + 1))
-        cells.append((x, y - 1))
+def decrease_source_count(s_id):
+    global current_sources
+    source_id_counter[s_id] -= 1
+    if source_id_counter[s_id] == 0:
+        current_sources -= 1
 
 
 pgzrun.go()
