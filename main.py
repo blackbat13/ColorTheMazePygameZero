@@ -11,6 +11,10 @@ TITLE = "Color The Maze Pygame Zero"
 
 SIZE = 20
 
+WALL_COLOR = (0, 0, 0, 0)
+
+BG_COLOR = (255, 255, 255, 255)
+
 """ VARIABLES """
 
 speed = 50
@@ -27,19 +31,17 @@ current_sources = 0
 
 
 def draw():
+    """ On draw handler 
+    """
     count = 0
     while len(cells_list) > 0 and count < speed * current_sources:
         pos, color, s_id = cells_list.pop(0)
         x, y = pos
-        if x < 0 or x >= WIDTH or y < 0 or y >= HEIGHT:
+        if not inside_screen(pos) or screen.surface.get_at(pos) != BG_COLOR:
             decrease_source_count(s_id)
             continue
 
-        if screen.surface.get_at((x, y)) != (255, 255, 255, 255):
-            decrease_source_count(s_id)
-            continue
-
-        screen.surface.set_at((x, y), color)
+        screen.surface.set_at(pos, color)
         count += 1
 
         source_id_counters_list[s_id] += 4
@@ -53,19 +55,21 @@ def draw():
 def draw_maze():
     """Generates and draws new random maze on the screen
     """
-    screen.fill("white")
+    screen.fill(BG_COLOR)
     for x in range(0, WIDTH, SIZE):
         for y in range(0, HEIGHT, SIZE):
             if random.random() < 0.5:
-                screen.draw.line((x, y), (x + SIZE, y + SIZE), (0, 0, 0))
+                screen.draw.line((x, y), (x + SIZE, y + SIZE), WALL_COLOR)
             else:
-                screen.draw.line((x, y + SIZE), (x + SIZE, y), (0, 0, 0))
+                screen.draw.line((x, y + SIZE), (x + SIZE, y), WALL_COLOR)
 
 
 """ UPDATE """
 
 
 def update():
+    """On update handler.
+    """
     pass
 
 
@@ -73,6 +77,12 @@ def update():
 
 
 def on_key_down(key):
+    """ Gives you a chance to control your maze generation
+        according to the key pressed.
+
+    Args:
+        key: pressed key
+    """
     global speed
 
     if key == keys.R:
@@ -87,6 +97,11 @@ def on_key_down(key):
 
 
 def on_mouse_down(pos):
+    """ Drops source at mouse position
+
+    Args:
+        pos (int, int): mouse position
+    """
     cells_list.append((pos, random_color(), add_source()))
 
 
@@ -122,8 +137,26 @@ def decrease_source_count(s_id):
 
 
 def random_color():
+    """'Returns a random color for the drawing of the cells
+
+    Returns:
+        (int, int, int, int): r, g, b, a tuple with values from 0 to 255
+    """
     return (random.randint(0, 255), random.randint(
-        0, 255), random.randint(0, 255))
+        0, 255), random.randint(0, 255), 255)
+
+
+def inside_screen(pos):
+    """Checks if given coordinate is inside the screen
+
+    Args:
+        pos (int, int): a tuple with x and y coordinates
+
+    Returns:
+        bool: True if inside the screen, False otherwise
+    """
+    x, y = pos
+    return 0 <= x < WIDTH and 0 <= y < HEIGHT
 
 
 """ INITIALIZATION """
